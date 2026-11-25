@@ -1,0 +1,66 @@
+database.sql
+
+-- Создаём базу данных
+CREATE DATABASE IF NOT EXISTS glass_exhibition CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE glass_exhibition;
+
+-- Таблица пользователей
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    login VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    company_name VARCHAR(150) NOT NULL,
+    contact_person VARCHAR(100),
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    role ENUM('client', 'admin') DEFAULT 'client',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Каталог продукции (экспонаты выставки)
+CREATE TABLE exhibits (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    volume_ml INT,
+    neck_type VARCHAR(50),
+    glass_color VARCHAR(30),
+    description TEXT,
+    image_url VARCHAR(255),
+    status ENUM('available', 'out_of_stock') DEFAULT 'available',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Заявки и обращения
+CREATE TABLE requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    type ENUM('sample_order', 'bulk_order', 'consultation', 'partnership', 'complaint') NOT NULL,
+    subject VARCHAR(200) NOT NULL,
+    message TEXT,
+    phone VARCHAR(20),
+    status ENUM('new', 'in_progress', 'done', 'rejected') DEFAULT 'new',
+    admin_comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Отзывы
+CREATE TABLE reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    rating TINYINT CHECK (rating BETWEEN 1 AND 5),
+    message TEXT,
+    status ENUM('published', 'moderated') DEFAULT 'published',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Тестовый администратор (пароль: admin123)
+INSERT INTO users (login, password, company_name, contact_person, email, role) VALUES
+('admin', '$2y$10$e0NRbQ5K5rL8xZqZqZqZqO8xZqZqZqZqZqZqZqZqZqZqZqZqZq', 'Каменск-Шахтинский стеклотарный завод', 'Администратор', 'admin@kamensk-glass.ru', 'admin');
+
+-- Тестовые экспонаты
+INSERT INTO exhibits (name, volume_ml, neck_type, glass_color, description, status) VALUES
+('Бутылка "Классика" 0,5л', 500, 'ТО-43', 'Прозрачное', 'Универсальная бутылка для напитков', 'available'),
+('Банка стеклянная 0,8л', 800, 'СКО-82', 'Прозрачное', 'Для консервации', 'available'),
+('Флакон парфюмерный 50мл', 50, 'PP-20', 'Зелёное', 'Для косметической продукции', 'available');
